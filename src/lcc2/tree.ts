@@ -18,6 +18,7 @@ export const planLods = (
     }
     if (node.child) for (const c of Object.values(node.child)) walk(c, depth + 1);
   };
+  // Root carries data.env but never data['3dgs'] (LCC2 spec), so depth 0 is absent from output; a tree with no 3dgs nodes yields zero levels.
   walk(manifest.root, 0);
 
   const depths = [...byDepth.keys()].sort((a, b) => a - b);

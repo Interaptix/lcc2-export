@@ -47,4 +47,14 @@ describe('planLods', () => {
     const { levels } = planLods(manifest, '/root');
     for (const l of levels) expect(l.expectedSplatCount).toBe(manifest.lodSplats[l.lodIndex]);
   });
+
+  it('returns no levels for a tree with no 3dgs nodes', () => {
+    const empty: Lcc2Manifest = {
+      version: '0.0.3', totalLevels: 0, lodSplats: [], splatType: '.sog',
+      root: { id: '0', childNum: 0, splatFiles: ['env.sog'], data: { env: { name: 0 } } }
+    };
+    const { levels, envFileIndex } = planLods(empty, '/root');
+    expect(levels).toEqual([]);
+    expect(envFileIndex).toBe(0);
+  });
 });
