@@ -30,4 +30,21 @@ describe('parseManifest', () => {
       expect(() => parseManifest(p)).toThrow(/splatFiles/);
     } finally { await rm(dir, { recursive: true, force: true }); }
   });
+
+  it('throws when root is missing', async () => {
+    const { dir, p } = await writeManifest({ version: '0.0.3', totalLevels: 1, lodSplats: [] });
+    try {
+      expect(() => parseManifest(p)).toThrow(/missing "root"/);
+    } finally { await rm(dir, { recursive: true, force: true }); }
+  });
+
+  it('throws when lodSplats is not an array', async () => {
+    const { dir, p } = await writeManifest({
+      version: '0.0.3', totalLevels: 1,
+      root: { id: '0', childNum: 0, splatFiles: [] }
+    });
+    try {
+      expect(() => parseManifest(p)).toThrow(/missing "lodSplats"/);
+    } finally { await rm(dir, { recursive: true, force: true }); }
+  });
 });

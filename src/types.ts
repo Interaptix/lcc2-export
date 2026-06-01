@@ -9,7 +9,7 @@ export type Lcc2Node = {
 
 export type Lcc2Root = Lcc2Node & {
   splatFiles: string[];
-  data?: { env?: { name: number } };
+  // root carries data.env (environment splat index) but not data['3dgs'] per the LCC2 spec
 };
 
 export type Lcc2Manifest = {
