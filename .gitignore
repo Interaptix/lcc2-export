@@ -1,0 +1,11 @@
+# deps / build
+node_modules
+dist
+
+# tool output
+*_sog/
+/tmp
+
+# large sample data + proprietary docs (kept locally, never committed)
+/output_lcc2.zip
+/*.pdf
