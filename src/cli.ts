@@ -1,6 +1,6 @@
 import { parseArgs } from 'node:util';
 import { mkdir } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { resolve, join } from 'node:path';
 import { resolveInput } from './lcc2/input.js';
 import { parseManifest } from './lcc2/manifest.js';
 import { planLods } from './lcc2/tree.js';
@@ -35,6 +35,16 @@ export const main = async (argv: string[] = process.argv.slice(2)): Promise<void
   }
 
   const [inputPath, outputArg] = positionals;
+
+  let wanted: Set<number> | null = null;
+  if (values.levels) {
+    const parsed = values.levels.split(',').map(s => parseInt(s.trim(), 10));
+    if (parsed.some(n => Number.isNaN(n))) {
+      throw new Error(`--levels must be a comma-separated list of integers, got: ${values.levels}`);
+    }
+    wanted = new Set(parsed);
+  }
+
   const input = await resolveInput(inputPath);
   try {
     const manifest = parseManifest(input.manifestPath);
@@ -42,10 +52,6 @@ export const main = async (argv: string[] = process.argv.slice(2)): Promise<void
 
     const outDir = resolveOutputDir(inputPath, outputArg);
     await mkdir(outDir, { recursive: true });
-
-    const wanted = values.levels
-      ? new Set(values.levels.split(',').map(s => parseInt(s.trim(), 10)))
-      : null;
 
     for (const lvl of levels) {
       if (wanted && !wanted.has(lvl.lodIndex)) continue;
@@ -58,7 +64,7 @@ export const main = async (argv: string[] = process.argv.slice(2)): Promise<void
     if (envFileIndex != null) {
       const envPath = resolve(input.rootDir, manifest.root.splatFiles[envFileIndex]);
       await copyEnv(envPath, outDir);
-      process.stdout.write(`  -> ${outDir}/env.sog (copied)\n`);
+      process.stdout.write(`  -> ${join(outDir, 'env.sog')} (copied)\n`);
     }
 
     process.stdout.write(`Done. Output: ${outDir}\n`);

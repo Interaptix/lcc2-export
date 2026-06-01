@@ -1,9 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import { existsSync } from 'node:fs';
-import { mkdtemp, rm, readFile as fsReadFile } from 'node:fs/promises';
+import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { readFile, getInputFormat } from '@playcanvas/splat-transform';
+import { readFile, getInputFormat, DataTable } from '@playcanvas/splat-transform';
 import { NodeReadFileSystem } from '../src/vendor/node-file-system.js';
 import { defaultOptions } from '../src/splat/options.js';
 import { main } from '../src/cli.js';
@@ -16,7 +16,7 @@ const countSplats = async (filename: string) => {
     filename, inputFormat: getInputFormat(filename),
     options: defaultOptions(), params: [], fileSystem: new NodeReadFileSystem()
   });
-  return tables.reduce((n, t) => n + t.numRows, 0);
+  return tables.reduce((n: number, t: DataTable) => n + t.numRows, 0);
 };
 
 describe.skipIf(!have)('cli end-to-end on sample', () => {
@@ -31,7 +31,7 @@ describe.skipIf(!have)('cli end-to-end on sample', () => {
       expect(existsSync(env)).toBe(true);
       expect(await countSplats(lod5)).toBe(305075);
       // env.sog is copied byte-for-byte (12,308-splat environment).
-      expect((await fsReadFile(env)).byteLength).toBeGreaterThan(0);
+      expect(await countSplats(env)).toBe(12308);
     } finally {
       await rm(outDir, { recursive: true, force: true });
     }
