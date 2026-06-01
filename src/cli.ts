@@ -58,6 +58,9 @@ export const main = async (argv: string[] = process.argv.slice(2)): Promise<void
       const outPath = lodFileName(outDir, lvl.lodIndex);
       process.stdout.write(`LOD ${lvl.lodIndex} (depth ${lvl.depth}): merging ${lvl.segmentPaths.length} segment(s)\n`);
       const written = await mergeSegmentsToSog(lvl.segmentPaths, outPath, createDevice);
+      if (written !== lvl.expectedSplatCount) {
+        process.stderr.write(`  WARNING: LOD ${lvl.lodIndex} expected ${lvl.expectedSplatCount} splats but wrote ${written}\n`);
+      }
       process.stdout.write(`  -> ${outPath} (${written} splats)\n`);
     }
 

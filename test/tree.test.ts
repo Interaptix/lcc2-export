@@ -57,4 +57,37 @@ describe('planLods', () => {
     expect(levels).toEqual([]);
     expect(envFileIndex).toBe(0);
   });
+
+  it('throws a named error when a 3dgs segment index is out of range of splatFiles', () => {
+    const badSeg: Lcc2Manifest = {
+      version: '0.0.3', totalLevels: 1, lodSplats: [5], splatType: '.sog',
+      root: {
+        id: '0', childNum: 1, splatFiles: ['f0.sog'],
+        child: { '0': { id: '0_0', childNum: 0, data: { '3dgs': { name: 9, start: 0, count: 5 } } } }
+      }
+    };
+    expect(() => planLods(badSeg, '/root')).toThrow(/segment file index 9 .* out of range/);
+  });
+
+  it('throws a named error when the env index is out of range of splatFiles', () => {
+    const badEnv: Lcc2Manifest = {
+      version: '0.0.3', totalLevels: 1, lodSplats: [5], splatType: '.sog',
+      root: {
+        id: '0', childNum: 1, splatFiles: ['f0.sog'], data: { env: { name: 7 } },
+        child: { '0': { id: '0_0', childNum: 0, data: { '3dgs': { name: 0, start: 0, count: 5 } } } }
+      }
+    };
+    expect(() => planLods(badEnv, '/root')).toThrow(/env splat index 7 .* out of range/);
+  });
+
+  it('throws when a level splat sum disagrees with lodSplats (manifest sanity check)', () => {
+    const mismatch: Lcc2Manifest = {
+      version: '0.0.3', totalLevels: 1, lodSplats: [99], splatType: '.sog',
+      root: {
+        id: '0', childNum: 1, splatFiles: ['f0.sog'],
+        child: { '0': { id: '0_0', childNum: 0, data: { '3dgs': { name: 0, start: 0, count: 5 } } } }
+      }
+    };
+    expect(() => planLods(mismatch, '/root')).toThrow(/inconsistency/);
+  });
 });
