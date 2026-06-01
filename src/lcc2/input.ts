@@ -28,9 +28,14 @@ export const resolveInput = async (inputPath: string): Promise<ResolvedInput> =>
 
   if (st.isFile() && abs.toLowerCase().endsWith('.zip')) {
     const tmp = await mkdtemp(join(tmpdir(), 'lcc2-'));
-    await extract(abs, { dir: tmp });
-    searchRoot = tmp;
     cleanup = async () => { await rm(tmp, { recursive: true, force: true }); };
+    try {
+      await extract(abs, { dir: tmp });
+    } catch (e) {
+      await cleanup();
+      throw e;
+    }
+    searchRoot = tmp;
   } else if (st.isDirectory()) {
     searchRoot = abs;
   } else {
