@@ -9,3 +9,9 @@ dist
 # large sample data + proprietary docs (kept locally, never committed)
 /output_lcc2.zip
 /*.pdf
+
+# proprietary XGRIDS splat fixtures (kept locally for integration tests; never committed)
+/test/fixtures/segments/*.sog
+
+# macOS
+.DS_Store
