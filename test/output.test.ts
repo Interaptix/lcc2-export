@@ -1,22 +1,24 @@
 import { describe, it, expect } from 'vitest';
 import { mkdtemp, writeFile, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { resolveOutputDir, lodFileName, copyEnv } from '../src/output.js';
 
+// Expectations go through `resolve`/`join` so they hold on both POSIX and
+// Windows, where the helpers' own `resolve`/`join` yield `D:\...` separators.
 describe('output helpers', () => {
   it('defaults output dir to a sibling _sog folder', () => {
-    expect(resolveOutputDir('/data/output_lcc2.zip', undefined)).toBe('/data/output_lcc2_sog');
-    expect(resolveOutputDir('/data/lcc2-result/', undefined)).toBe('/data/lcc2-result_sog');
+    expect(resolveOutputDir('/data/output_lcc2.zip', undefined)).toBe(resolve('/data/output_lcc2_sog'));
+    expect(resolveOutputDir('/data/lcc2-result/', undefined)).toBe(resolve('/data/lcc2-result_sog'));
   });
 
   it('honors an explicit output arg', () => {
-    expect(resolveOutputDir('/data/x.zip', '/out/here')).toBe('/out/here');
+    expect(resolveOutputDir('/data/x.zip', '/out/here')).toBe(resolve('/out/here'));
   });
 
   it('names lod files by index', () => {
-    expect(lodFileName('/out', 0)).toBe('/out/lod0.sog');
-    expect(lodFileName('/out', 3)).toBe('/out/lod3.sog');
+    expect(lodFileName('/out', 0)).toBe(join('/out', 'lod0.sog'));
+    expect(lodFileName('/out', 3)).toBe(join('/out', 'lod3.sog'));
   });
 
   it('copies env.sog byte-for-byte', async () => {

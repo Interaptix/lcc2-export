@@ -1,4 +1,7 @@
-import { readFile, writeFile, combine, getInputFormat, getOutputFormat, type DataTable } from '@playcanvas/splat-transform';
+import {
+  readFile, writeFile, combine, getInputFormat, getOutputFormat,
+  createChunkDataPool, materializeToDataTable, type DataTable
+} from '@playcanvas/splat-transform';
 import { NodeReadFileSystem, NodeFileSystem } from './vendor/node-file-system.js';
 import { defaultOptions } from './splat/options.js';
 
@@ -14,14 +17,24 @@ export const mergeSegmentsToSog = async (
   const fileSystem = new NodeReadFileSystem();
   const tables: DataTable[] = [];
   for (const filename of segmentPaths) {
-    const result = await readFile({
+    // splat-transform >= 3 returns lazy ChunkSources; materialize each to the
+    // columnar DataTable that `combine` / `writeFile` still take.
+    const sources = await readFile({
       filename,
       inputFormat: getInputFormat(filename),
       options: defaultOptions(),
       params: [],
       fileSystem
     });
-    tables.push(...result);
+    for (const source of sources) {
+      // materializeToDataTable requires pool.chunkSize >= the source's.
+      const pool = createChunkDataPool({ chunkSize: source.meta.chunkSize });
+      try {
+        tables.push(await materializeToDataTable(source, pool));
+      } finally {
+        await source.close();
+      }
+    }
   }
   const merged = combine(tables);
   await writeFile({

@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+import { resolve } from 'node:path';
 import { planLods } from '../src/lcc2/tree.js';
 import type { Lcc2Manifest } from '../src/types.js';
 
@@ -33,13 +34,14 @@ describe('planLods', () => {
     const byLod = Object.fromEntries(levels.map(l => [l.lodIndex, l]));
     // lod0 = deepest depth 3 = file 2, count 1
     expect(byLod[0].depth).toBe(3);
-    expect(byLod[0].segmentPaths).toEqual(['/root/f2.sog']);
+    // `resolve` so the expectation holds on Windows too (D:\root\f2.sog).
+    expect(byLod[0].segmentPaths).toEqual([resolve('/root', 'f2.sog')]);
     expect(byLod[0].expectedSplatCount).toBe(1);
     // lod1 = depth 2 = file 1, counts 2+1 = 3
-    expect(byLod[1].segmentPaths).toEqual(['/root/f1.sog']);
+    expect(byLod[1].segmentPaths).toEqual([resolve('/root', 'f1.sog')]);
     expect(byLod[1].expectedSplatCount).toBe(3);
     // lod2 = depth 1 = file 0, count 5
-    expect(byLod[2].segmentPaths).toEqual(['/root/f0.sog']);
+    expect(byLod[2].segmentPaths).toEqual([resolve('/root', 'f0.sog')]);
     expect(byLod[2].expectedSplatCount).toBe(5);
   });
 

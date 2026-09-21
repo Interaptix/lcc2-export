@@ -3,7 +3,7 @@ import { existsSync } from 'node:fs';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { readFile, getInputFormat, DataTable } from '@playcanvas/splat-transform';
+import { readFileInfo, getInputFormat } from '@playcanvas/splat-transform';
 import { NodeReadFileSystem } from '../src/vendor/node-file-system.js';
 import { defaultOptions } from '../src/splat/options.js';
 import { main } from '../src/cli.js';
@@ -11,12 +11,14 @@ import { main } from '../src/cli.js';
 const SAMPLE = 'output_lcc2.zip';
 const have = existsSync(SAMPLE);
 
+// Each exported file is a single-LOD .sog, so `numGaussians` (the finest LOD's
+// count) is the whole file's splat count — read from the header, no decode.
 const countSplats = async (filename: string) => {
-  const tables = await readFile({
+  const info = await readFileInfo({
     filename, inputFormat: getInputFormat(filename),
     options: defaultOptions(), params: [], fileSystem: new NodeReadFileSystem()
   });
-  return tables.reduce((n: number, t: DataTable) => n + t.numRows, 0);
+  return info.numGaussians;
 };
 
 describe.skipIf(!have)('cli end-to-end on sample', () => {
