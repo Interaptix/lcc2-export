@@ -6,7 +6,6 @@ Convert an XGRIDS **LCC2** (Lixel CyberColor 2) photogrammetry export into PlayC
 
 - **Node.js ≥ 20** — check with `node --version`
 - On the first install, the `webgpu` dependency builds/downloads a native **Dawn** (WebGPU) binary for your platform.
-- The repo is **private** — cloning needs GitHub access to the Interaptix org (e.g. `gh auth login`, or an SSH key).
 
 ## Install
 
@@ -95,3 +94,7 @@ Integration tests that depend on proprietary XGRIDS sample data auto-skip when t
 ## A note on data
 
 XGRIDS sample captures, the whitepaper PDF, and the `.sog` test fixtures are XGRIDS proprietary. They are gitignored and never committed; keep them locally to run the integration tests.
+
+## License
+
+MIT — see [LICENSE](LICENSE). `src/vendor/` contains files copied from [@playcanvas/splat-transform](https://github.com/playcanvas/splat-transform) (MIT, PlayCanvas Ltd.).

@@ -1,3 +1,5 @@
+// Copyright (c) 2011-2026 PlayCanvas Ltd. Licensed under the MIT License.
+// Source: https://github.com/playcanvas/splat-transform (see src/vendor/LICENSE-playcanvas).
 // Vendored verbatim from @playcanvas/splat-transform src/cli/node-file-system.ts
 // (these Node FS adapters are needed but not part of the package's public exports).
 import { randomBytes } from 'crypto';

@@ -2,6 +2,8 @@
   "name": "lcc2-export",
   "version": "0.1.0",
   "type": "module",
+  "license": "MIT",
+  "repository": { "type": "git", "url": "git+https://github.com/Interaptix/lcc2-export.git" },
   "bin": { "lcc2-export": "bin/lcc2-export.mjs" },
   "files": ["dist", "bin"],
   "scripts": {

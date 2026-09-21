@@ -1,3 +1,5 @@
+// Copyright (c) 2011-2026 PlayCanvas Ltd. Licensed under the MIT License.
+// Source: https://github.com/playcanvas/splat-transform (see src/vendor/LICENSE-playcanvas).
 // Vendored verbatim from @playcanvas/splat-transform src/cli/node-device.ts
 // (Dawn/WebGPU device creation for headless SOG encode; not part of public exports).
 import { GraphicsDevice, WebgpuGraphicsDevice } from 'playcanvas';
