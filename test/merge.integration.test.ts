@@ -4,7 +4,8 @@ import { rm, mkdtemp } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
-  readFile, writeFile, getInputFormat, getOutputFormat, Column, DataTable
+  readFile, readFileInfo, writeFile, getInputFormat, getOutputFormat,
+  createChunkDataPool, materializeToDataTable, Column, DataTable, type ChunkSource
 } from '@playcanvas/splat-transform';
 import { NodeReadFileSystem, NodeFileSystem } from '../src/vendor/node-file-system.js';
 import { createDevice } from '../src/vendor/node-device.js';
@@ -15,12 +16,28 @@ const segA = 'test/fixtures/segments/0_6_0_0.sog';
 const segB = 'test/fixtures/segments/0_5_0.sog';
 const have = existsSync(segA) && existsSync(segB);
 
+// Every file here is a single-LOD .sog, so `numGaussians` (the finest LOD's
+// count) is the whole file's splat count — read from the header, no decode.
 const countSplats = async (filename: string) => {
-  const tables = await readFile({
+  const info = await readFileInfo({
     filename, inputFormat: getInputFormat(filename),
     options: defaultOptions(), params: [], fileSystem: new NodeReadFileSystem()
   });
-  return tables.reduce((n: number, t: DataTable) => n + t.numRows, 0);
+  return info.numGaussians;
+};
+
+/** Decode a splat file into a single DataTable. */
+const readTable = async (filename: string): Promise<DataTable> => {
+  const sources = await readFile({
+    filename, inputFormat: getInputFormat(filename),
+    options: defaultOptions(), params: [], fileSystem: new NodeReadFileSystem()
+  });
+  const pool = createChunkDataPool({ chunkSize: sources[0].meta.chunkSize });
+  try {
+    return await materializeToDataTable(sources[0], pool);
+  } finally {
+    await Promise.all(sources.map((s: ChunkSource) => s.close()));
+  }
 };
 
 describe.skipIf(!have)('merge real XGrids .sog', () => {
@@ -99,13 +116,9 @@ describe('SOG GPU encode path (headless WebGPU)', () => {
       expect(deviceCalls).toBeGreaterThan(0);
 
       // And the encoded bundle must decode back losslessly (rows + all SH columns).
-      const back = await readFile({
-        filename: out, inputFormat: getInputFormat(out),
-        options: defaultOptions(), params: [], fileSystem: new NodeReadFileSystem()
-      });
-      const rows = back.reduce((n: number, t: DataTable) => n + t.numRows, 0);
-      expect(rows).toBe(N);
-      const shPreserved = back[0].columnNames.filter((n: string) => /^f_rest_/.test(n)).length;
+      const back = await readTable(out);
+      expect(back.numRows).toBe(N);
+      const shPreserved = back.columnNames.filter((n: string) => /^f_rest_/.test(n)).length;
       expect(shPreserved).toBe(45);
     } finally {
       await rm(dir, { recursive: true, force: true });

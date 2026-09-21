@@ -7,6 +7,7 @@ import { planLods } from './lcc2/tree.js';
 import { resolveOutputDir, lodFileName, copyEnv } from './output.js';
 import { mergeSegmentsToSog } from './merge.js';
 import { createDevice } from './vendor/node-device.js';
+import type { GraphicsDevice } from 'playcanvas';
 
 const USAGE = `lcc2-export — export each LCC2 LOD level to a single SOG file
 
@@ -46,6 +47,14 @@ export const main = async (argv: string[] = process.argv.slice(2)): Promise<void
   }
 
   const input = await resolveInput(inputPath);
+
+  // The SOG writer calls `createDevice()` on every write that carries SH bands. Dawn (the
+  // `webgpu` package) segfaults when a second instance is created while the first is still
+  // being finalized, so — like splat-transform's own CLI — create the device lazily, once,
+  // and hand every LOD the same one.
+  let device: GraphicsDevice | undefined;
+  const getDevice = async (): Promise<GraphicsDevice> => (device ??= await createDevice());
+
   try {
     const manifest = parseManifest(input.manifestPath);
     const { levels, envFileIndex } = planLods(manifest, input.rootDir);
@@ -57,7 +66,7 @@ export const main = async (argv: string[] = process.argv.slice(2)): Promise<void
       if (wanted && !wanted.has(lvl.lodIndex)) continue;
       const outPath = lodFileName(outDir, lvl.lodIndex);
       process.stdout.write(`LOD ${lvl.lodIndex} (depth ${lvl.depth}): merging ${lvl.segmentPaths.length} segment(s)\n`);
-      const written = await mergeSegmentsToSog(lvl.segmentPaths, outPath, createDevice);
+      const written = await mergeSegmentsToSog(lvl.segmentPaths, outPath, getDevice);
       if (written !== lvl.expectedSplatCount) {
         process.stderr.write(`  WARNING: LOD ${lvl.lodIndex} expected ${lvl.expectedSplatCount} splats but wrote ${written}\n`);
       }
@@ -73,5 +82,6 @@ export const main = async (argv: string[] = process.argv.slice(2)): Promise<void
     process.stdout.write(`Done. Output: ${outDir}\n`);
   } finally {
     await input.cleanup();
+    device?.destroy();
   }
 };
